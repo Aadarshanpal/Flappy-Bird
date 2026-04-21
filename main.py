@@ -13,6 +13,25 @@ pg.init()
 screen = pg.display.set_mode((width,height))
 
 
+# Making the actual Bird
+class Player:
+    def __init__(self,x,y,size):
+        self.x = x
+        self.y = y
+        self.size = size
+
+        self.jump_speed = 50
+        self.fall_speed = 30
+
+    def movement(self,dt):
+        pass
+    
+
+    def draw_player(self):
+        pass
+
+
+
 #Main Game Loop
 running = True
 while running:
@@ -26,6 +45,11 @@ while running:
     
     # Filling the screen with the bg color
     screen.fill((0,0,0))
+
+    # movement
+
+    
+    #drawing
 
 
     # Flipping the frame buffer to show next changes
