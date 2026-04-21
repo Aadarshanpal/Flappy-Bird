@@ -44,11 +44,29 @@ class Player:
 
         self.y += self.speed
 
-            
-    
-
     def draw_player(self,surface):
         pg.draw.rect(surface, (255,255,255), (self.x,int(self.y),self.size,self.size))
+
+
+# The "Pipes" / blocks / obstacles
+class Pipes:
+    def __init__(self,x,y,w,h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.speed = 5
+
+    def update(self):
+        self.x -= self.speed
+        if self.x < -self.w:
+            self.x = width
+            self.y = random.randint(-300,0)
+    def draw_pipes(self,surface):
+        pg.draw.rect(surface , (0,200,0) , (self.x,self.y,self.w,self.h))
+        
+
+pipe1 = Pipes(width,random.randint(-300,-200),30,500)
 
 size = 40
 bird = Player(width//2,height//2,size)
@@ -70,6 +88,9 @@ while running:
 
     bird.update(dt)
 
+    pipe1.update()
+
+    pipe1.draw_pipes(screen)
 
     bird.draw_player(screen)
 
