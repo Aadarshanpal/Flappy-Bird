@@ -5,6 +5,10 @@ import random as random
 width , height = 700, 950
 
 
+# Defining clock
+clock = pg.time.Clock()
+
+
 # Initialization of the Program
 pg.init()
 
@@ -20,22 +24,38 @@ class Player:
         self.y = y
         self.size = size
 
-        self.jump_speed = 50
-        self.fall_speed = 30
+        self.speed = 0
+
+        self.jump_speed = 5
+        self.fall_speed = 2
+        self.max_speed = 7
+        
 
     def movement(self,dt):
-        pass
+        keys = pg.key.get_pressed()
+
+        if keys[pg.K_SPACE]:
+            self.speed -= self.jump_speed * dt
+        else:   
+            self.speed += self.fall_speed * dt
+
+        self.speed = max(-self.max_speed, min(self.speed, self.max_speed))
+    def update(self,dt):
+
+        self.y += self.speed
+
+            
     
 
-    def draw_player(self):
-        pass
+    def draw_player(self,surface):
+        pg.draw.rect(surface, (255,255,255), (self.x,int(self.y),self.size,self.size))
 
-
-
+size = 40
+bird = Player(width//2,height//2,size)
 #Main Game Loop
 running = True
 while running:
-
+    dt = clock.tick(60) / 1000
 
     # Checking for exit
     for event in pg.event.get():
@@ -46,10 +66,12 @@ while running:
     # Filling the screen with the bg color
     screen.fill((0,0,0))
 
-    # movement
+    bird.movement(dt)
 
-    
-    #drawing
+    bird.update(dt)
+
+
+    bird.draw_player(screen)
 
 
     # Flipping the frame buffer to show next changes
