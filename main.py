@@ -26,9 +26,9 @@ class Player:
 
         self.speed = 0
 
-        self.jump_speed = 5
-        self.fall_speed = 2
-        self.max_speed = 7
+        self.jump_speed = 200
+        self.fall_speed = 60
+        self.max_speed = 300
         
 
     def movement(self,dt):
@@ -42,7 +42,7 @@ class Player:
         self.speed = max(-self.max_speed, min(self.speed, self.max_speed))
     def update(self,dt):
 
-        self.y += self.speed
+        self.y += self.speed * dt
 
     def draw_player(self,surface):
         pg.draw.rect(surface, (255,255,255), (self.x,int(self.y),self.size,self.size))
@@ -61,12 +61,22 @@ class Pipes:
         self.x -= self.speed
         if self.x < -self.w:
             self.x = width
-            self.y = random.randint(-300,0)
+            if self.y <= 0:
+                self.y = random.randint(-300,0)
+            else:
+                self.y = random.randint(height-400,height-200)
     def draw_pipes(self,surface):
         pg.draw.rect(surface , (0,200,0) , (self.x,self.y,self.w,self.h))
         
 
-pipe1 = Pipes(width,random.randint(-300,-200),30,500)
+pipe = [Pipes(width,random.randint(-300,-200),30,450),
+        Pipes(width,random.randint(height-400,height-200),30,450),
+        Pipes(width+200,random.randint(-300,-200),30,450),
+        Pipes(width+200,random.randint(height-400,height-200),30,450),
+        Pipes(width+400,random.randint(-300,-200),30,450),
+        Pipes(width+400,random.randint(height-400,height-200),30,450),
+        Pipes(width+600,random.randint(-300,-200),30,450),
+        Pipes(width+600,random.randint(height-400,height-200),30,450)]
 
 size = 40
 bird = Player(width//2,height//2,size)
@@ -88,11 +98,14 @@ while running:
 
     bird.update(dt)
 
-    pipe1.update()
+    for pip in pipe:
+        pip.update()
+        pip.draw_pipes(screen)
 
-    pipe1.draw_pipes(screen)
 
     bird.draw_player(screen)
+
+    
 
 
     # Flipping the frame buffer to show next changes
