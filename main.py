@@ -1,113 +1,139 @@
 import pygame as pg
-import random as random
+import random
 
-# The length X height of the window of program
-width , height = 700, 950
-
-
-# Defining clock
+# Window setup
+width, height = 700, 950
+pg.init()
+screen = pg.display.set_mode((width, height))
 clock = pg.time.Clock()
 
-
-# Initialization of the Program
-pg.init()
-
-
-# Making the screen/Surface
-screen = pg.display.set_mode((width,height))
-
-
-# Making the actual Bird
+# ================= PLAYER =================
 class Player:
-    def __init__(self,x,y,size):
+    def __init__(self, x, y, size):
         self.x = x
         self.y = y
         self.size = size
 
         self.speed = 0
+        self.gravity = 2000
+        self.jump_force = -600
 
-        self.jump_speed = 200
-        self.fall_speed = 60
-        self.max_speed = 300
-        
+    def jump(self):
+        self.speed = self.jump_force
 
-    def movement(self,dt):
-        keys = pg.key.get_pressed()
-
-        if keys[pg.K_SPACE]:
-            self.speed -= self.jump_speed * dt
-        else:   
-            self.speed += self.fall_speed * dt
-
-        self.speed = max(-self.max_speed, min(self.speed, self.max_speed))
-    def update(self,dt):
-
+    def update(self, dt):
+        self.speed += self.gravity * dt
         self.y += self.speed * dt
 
-    def draw_player(self,surface):
-        pg.draw.rect(surface, (255,255,255), (self.x,int(self.y),self.size,self.size))
+    def get_rect(self):
+        return pg.Rect(self.x, self.y, self.size, self.size)
+
+    def draw(self, surface):
+        pg.draw.rect(surface, (255, 255, 255),
+                     (self.x, int(self.y), self.size, self.size))
 
 
-# The "Pipes" / blocks / obstacles
-class Pipes:
-    def __init__(self,x,y,w,h):
+# ================= PIPES =================
+class Pipe:
+    def __init__(self, x):
         self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.speed = 5
+        self.width = 60
+        self.gap = 200
+        self.speed = 300
 
-    def update(self):
-        self.x -= self.speed
-        if self.x < -self.w:
+        self.reset()
+
+    def reset(self):
+        self.top_height = random.randint(150, 500)
+        self.bottom_y = self.top_height + self.gap
+
+    def update(self, dt):
+        self.x -= self.speed * dt
+
+        if self.x < -self.width:
             self.x = width
-            if self.y <= 0:
-                self.y = random.randint(-300,0)
-            else:
-                self.y = random.randint(height-400,height-200)
-    def draw_pipes(self,surface):
-        pg.draw.rect(surface , (0,200,0) , (self.x,self.y,self.w,self.h))
-        
+            self.reset()
 
-pipe = [Pipes(width,random.randint(-300,-200),30,450),
-        Pipes(width,random.randint(height-400,height-200),30,450),
-        Pipes(width+200,random.randint(-300,-200),30,450),
-        Pipes(width+200,random.randint(height-400,height-200),30,450),
-        Pipes(width+400,random.randint(-300,-200),30,450),
-        Pipes(width+400,random.randint(height-400,height-200),30,450),
-        Pipes(width+600,random.randint(-300,-200),30,450),
-        Pipes(width+600,random.randint(height-400,height-200),30,450)]
+    def get_rects(self):
+        top_rect = pg.Rect(self.x, 0, self.width, self.top_height)
+        bottom_rect = pg.Rect(self.x, self.bottom_y,
+                              self.width, height - self.bottom_y)
+        return top_rect, bottom_rect
 
-size = 40
-bird = Player(width//2,height//2,size)
-#Main Game Loop
+    def draw(self, surface):
+        top_rect, bottom_rect = self.get_rects()
+        pg.draw.rect(surface, (0, 200, 0), top_rect)
+        pg.draw.rect(surface, (0, 200, 0), bottom_rect)
+
+
+# ================= INIT =================
+bird = Player(width // 3, height // 2, 40)
+
+pipes = [
+    Pipe(width),
+    Pipe(width + 300),
+    Pipe(width + 600)
+]
+
+font_big = pg.font.SysFont(None, 80)
+font_small = pg.font.SysFont(None, 40)
+
+game_over = False
 running = True
+
+# ================= LOOP =================
 while running:
     dt = clock.tick(60) / 1000
 
-    # Checking for exit
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    
-    
-    # Filling the screen with the bg color
-    screen.fill((0,0,0))
 
-    bird.movement(dt)
+        if event.type == pg.KEYDOWN:
+            if not game_over:
+                if event.key == pg.K_SPACE:
+                    bird.jump()
+            else:
+                if event.key == pg.K_r:
+                    # Restart game
+                    bird = Player(width // 3, height // 2, 40)
+                    pipes = [Pipe(width), Pipe(width + 300), Pipe(width + 600)]
+                    game_over = False
 
-    bird.update(dt)
+    screen.fill((0, 0, 0))
 
-    for pip in pipe:
-        pip.update()
-        pip.draw_pipes(screen)
+    # ===== UPDATE =====
+    if not game_over:
+        bird.update(dt)
 
+        for pipe in pipes:
+            pipe.update(dt)
 
-    bird.draw_player(screen)
+        # ===== COLLISION =====
+        bird_rect = bird.get_rect()
 
-    
+        if bird.y < 0 or bird.y > height:
+            game_over = True
 
+        for pipe in pipes:
+            top_rect, bottom_rect = pipe.get_rects()
 
-    # Flipping the frame buffer to show next changes
+            if bird_rect.colliderect(top_rect) or bird_rect.colliderect(bottom_rect):
+                game_over = True
+
+    # ===== DRAW =====
+    for pipe in pipes:
+        pipe.draw(screen)
+
+    bird.draw(screen)
+
+    if game_over:
+        text = font_big.render("GAME OVER", True, (255, 0, 0))
+        screen.blit(text, (width // 2 - 180, height // 2 - 60))
+
+        restart_text = font_small.render("Press R to Restart", True, (255, 255, 255))
+        screen.blit(restart_text, (width // 2 - 170, height // 2 + 20))
+
     pg.display.flip()
 
+pg.quit()
