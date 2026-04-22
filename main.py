@@ -2,7 +2,7 @@ import pygame as pg
 import random
 
 # Window setup
-width, height = 700, 950
+width, height = 900, 950
 pg.init()
 screen = pg.display.set_mode((width, height))
 clock = pg.time.Clock()
